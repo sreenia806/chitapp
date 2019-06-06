@@ -3,6 +3,11 @@
 
 <head>
     @include('partials.head')
+    <style>
+        .select2-selection__rendered, .subscriber_col {
+            width: 200px;
+        }
+    </style>
 </head>
 
 

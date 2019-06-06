@@ -125,16 +125,30 @@ class InstallmentsController extends Controller
         $installments = Installment::leftjoin('subscribers', 'subscribers.id', '=', 'installments.subscriber_id')
             ->join('members', 'members.id', '=', 'subscribers.member_id')
             ->leftjoin('auctions', 'auctions.id', '=', 'installments.auction_id')
+            ->leftjoin('ledger_entries', 'ledger_entries.installment_id', '=', 'installments.id')
             ->select(array(
                 'auctions.number',
                 'subscribers.ticket',
                 DB::raw("CONCAT(members.first_name, ' ', members.last_name) AS name"),
+                DB::raw("SUM(ledger_entries.amount) AS paid_amount"),
+                'installments.id',
+                'installments.subscriber_id',
                 'installments.due_amount',
                 'installments.due_date',
                 'installments.paid_date',
                 'installments.status'
             ))
             ->where(['auctions.scheme_id' => $request->input('scheme_id')])
+            ->groupBy([
+                'auctions.number',
+                'subscribers.ticket',
+                'name',
+                'installments.id',
+                'installments.subscriber_id',
+                'installments.due_amount',
+                'installments.due_date',
+                'installments.paid_date',
+                'installments.status'])
             ->orderByRaw('installments.status ASC, auctions.number ASC, subscribers.ticket ASC')
             ->offset($start)
             ->limit($page_size)
@@ -142,8 +156,18 @@ class InstallmentsController extends Controller
             ->toArray();
 
         $totalRows = DB::table('installments')
+            ->leftjoin('subscribers', 'subscribers.id', '=', 'installments.subscriber_id')
             ->leftjoin('auctions', 'auctions.id', '=', 'installments.auction_id')
-            ->where(['auctions.scheme_id' => $request->input('scheme_id')])->count();
+            ->whereNotNull('subscribers.member_id')
+            ->where([ 'auctions.scheme_id' => $request->input('scheme_id')])->count();
+
+        foreach ($installments as &$eachInstallment) {
+            if ($eachInstallment['status'] == 'pending') {
+                $eachInstallment['status'] = '
+                    <button class="btn btn-sm btn-info"  data-toggle="modal" data-target="#addMemberPayment">Pay</button>
+                ';
+            }
+        }
 
         return response()->json([
             'draw' =>  intval($request->input('draw')),

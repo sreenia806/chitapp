@@ -83,8 +83,8 @@
                             <th style="width:150px">@lang('quickadmin.auctions.fields.remaining_amount')</th>
                             <th style="width:150px">@lang('quickadmin.auctions.fields.installment_total')</th>
                             <th style="width:150px">@lang('quickadmin.auctions.fields.collected_total')</th>
-                            <th>@lang('quickadmin.auctions.fields.subscriber_id')</th>
-                            <th> </th>
+                            <th style="width:220px">@lang('quickadmin.auctions.fields.subscriber_id')</th>
+                            <th > </th>
                         </tr>
                         </thead>
 
@@ -116,12 +116,12 @@
                                     <td field-key='collected_total'>
                                         <input name="collected_total[{{ $auction->id }}]" value="₹{{ isset($arrAuctionCollected[$auction->id]) ? number_format($arrAuctionCollected[$auction->id], 2) : 0.00 }}" readonly class="form-control moneyFormat  text-right" />
                                     </td>
-                                    <td field-key='subscriber'>
+                                    <td field-key='subscriber' style="width:220px; overflow: hidden">
                                         @if ($auction->status != 'awarded')
                                         {{Form::select('subscriber[' . $auction->id . ']',
                                              $remaining_subscribers,
                                              $auction->subscriber_id,
-                                              ['class' => 'form-control select2 full-width'])}}
+                                              ['class' => 'form-control select2'])}}
                                         @else
                                             @can('member_view')
                                                 <a href="{{ route('admin.members.show',[$auction->subscriber->member->id]) }}">{{$auction->subscriber->member->name}}</a>
@@ -168,7 +168,7 @@
                         <thead>
                         <tr>
                             <th>@lang('quickadmin.subscribers.fields.ticket')</th>
-                            <th>@lang('quickadmin.subscribers.fields.name')</th>
+                            <th  style="width:75px">@lang('quickadmin.subscribers.fields.name')</th>
                             <th>@lang('quickadmin.subscribers.fields.confirmed_date')</th>
                             <th>@lang('quickadmin.subscribers.fields.status')</th>
                         </tr>
@@ -179,7 +179,7 @@
                             @foreach ($subscribers as $subscriber)
                                 <tr data-entry-id="{{ $subscriber->id }}">
                                     <td field-key='ticket'>{{ $subscriber->ticket }}</td>
-                                    <td field-key='name'>
+                                    <td field-key='name'  style="width:220px">
                                         @if ($scheme->status == 'pending' || empty($subscriber->member_id))
                                         {{Form::select('subscribers[' . $subscriber->id . ']',
                                              $members,
@@ -215,7 +215,8 @@
                         <tr>
                             <th>@lang('quickadmin.installments.fields.number')</th>
                             <th>@lang('quickadmin.installments.fields.ticket')</th>
-                            <th>@lang('quickadmin.installments.fields.subscriber')</th>
+                            <th style="width:220px">@lang('quickadmin.installments.fields.subscriber')</th>
+                            <th>Paid Amount</th>
                             <th>@lang('quickadmin.installments.fields.due_amount')</th>
                             <th>@lang('quickadmin.installments.fields.due_date')</th>
                             <th>@lang('quickadmin.installments.fields.paid_date')</th>
@@ -233,8 +234,7 @@
 
 					<div class="panel-heading text-right">
 						<!-- Trigger the modal with a button -->
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#addPayment">Payment</button>
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#chitExpense">Add Expenses</button>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#chitExpense">Add Chit Income/Expenses</button>
 					</div>
 					<div class="panel-body table-responsive">
 					    <table class="table table-bordered table-striped " id="tblPayments">
@@ -277,7 +277,7 @@
 
 
 @include('partials.addchitexpense')
-@include('partials.addchitpayment')
+@include('partials.addmemberpayment')
 
 
 
@@ -335,6 +335,24 @@
 
 			get_installments();
 			get_chitledger();
+
+
+            $('#tableInstallments tbody').on( 'click', 'button', function () {
+
+                var action = this.className;
+                var data = tblInstallments.row( $(this).closest('tr') ).data();
+                console.log(data);
+                var paid_amount = data.paid_amount ? data.paid_amount : 0;
+                var due_amount = data.due_amount * 1; // make sure it is numerical
+
+                $('[name=scheme_id]', $('#addMemberPayment')).val({{$scheme->id}});
+                $('#spnSubscription', $('#addMemberPayment')).html('[Ticket: ' + data.ticket + '][auction: ' + data.number + ']');
+                $('#spnInstallment', $('#addMemberPayment')).html('₹ ' + paid_amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')  + '/' + '₹ ' + due_amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+                $('[name=subscriber_id]', $('#addMemberPayment')).val(data.subscriber_id);
+                $('[name=installment_id]', $('#addMemberPayment')).val(data.id);
+                $('[name=due_amount]', $('#addMemberPayment')).val(due_amount - paid_amount);
+                //$('#addBookDialog').modal('show');
+            } );
         });
 
         function resetInstallmentTotal()
@@ -397,7 +415,8 @@
                 "columns": [
                     { "data": "number" },
                     { "data": "ticket" },
-                    { "data": "name" },
+                    { "data": "name", className: "subscriber_col" },
+                    { "data": "paid_amount", className: "text-right dt-nowrap" },
                     { "data": "due_amount", className: "text-right dt-nowrap" },
                     { "data": "due_date" },
                     { "data": "paid_date" },

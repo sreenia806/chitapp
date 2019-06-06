@@ -10,15 +10,25 @@
       </div>
       <div class="modal-body">
 
-            <div class="row">
-                <div class="col-xs-12 form-group">
-                    <label for="ledger_description" class="control-label">Description</label>
-                    <span>
+          <div class="row">
+              <div class="col-xs-12 form-group">
+                  <label for="ledger_category" class="control-label">Income / Expense</label>
+                  <span>
+                      <label class="radio-inline"><input type="radio" name="ledger_category" value="{{ config('app.chit_ledger_codes.INCOME') }}" >Income</label>
+                      <label class="radio-inline"><input type="radio" name="ledger_category" value="{{ config('app.chit_ledger_codes.COMMISSION') }}" checked>Expense</label>
+						<p class="help-block"></p>
+                    </span>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col-xs-12 form-group">
+                  <label for="ledger_description" class="control-label">Description</label>
+                  <span>
 						<input class="form-control" placeholder="" required="" name="ledger_description" type="text">
 						<p class="help-block"></p>
                     </span>
-                </div>
-            </div>
+              </div>
+          </div>
 
             <div class="row">
                 <div class="col-xs-12 form-group">
@@ -46,7 +56,7 @@
     @parent
     <script>
 		$('#btnExpense').click(function() {
-			
+
 			if ($('[name=ledger_description]').val() == '') {
 				$('.help-block', $('[name=ledger_description]').closest('span')).text('Description requried');
 				return;
@@ -63,6 +73,7 @@
                     url: "{{ route('admin.add_scheme_expense') }}",
                     method: 'POST',
 					data: {
+						category:$('[name=ledger_category]:checked').val(),
 						description:$('[name=ledger_description]').val(),
 						amount: amount,
 						scheme_id: '{{$scheme->id}}',
@@ -76,7 +87,7 @@
                         } else {
                             alert('error occured');
                         }
-						
+
 						tblLedger.ajax.reload( null, false ); // user paging is not reset on reload
 
                     }

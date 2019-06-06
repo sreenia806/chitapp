@@ -256,7 +256,8 @@ return [
     'chit_ledger_codes' => [
         'INSTALLMENT' => 1,
         'PAYOUT' => 2,
-        'COMMISSION' => 3
+        'COMMISSION' => 3,
+        'INCOME' => 4
     ]
 
 ];

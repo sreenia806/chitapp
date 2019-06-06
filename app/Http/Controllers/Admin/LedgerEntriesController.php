@@ -251,13 +251,13 @@ class LedgerEntriesController extends Controller
         try {
 
             DB::beginTransaction();
-
+            $ledger_category = $request->input('category', 3);
             $ledgerEntry = LedgerEntry::saveRecord([
                 'description' => $request->input('description'),
                 'amount' => $request->input('amount'),
 				'scheme_id' => $request->input('scheme_id'),
                 'entry_date' => date('Y-m-d'),
-                'ledger_category_id' => config('app.chit_ledger_codes.COMMISSION')
+                'ledger_category_id' => $ledger_category
             ]);
 
             DB::commit();
